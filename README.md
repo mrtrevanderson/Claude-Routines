@@ -4,9 +4,13 @@ Automated routines that run via the Claude Code CLI using connected MCP servers.
 
 ## Routines
 
-### morning_briefing
+### morning-briefing
 
-Daily weekday briefing delivered as a Slack DM at 8:30 AM ET. Pulls from Jira, Confluence, Slack, and Microsoft 365 Calendar, synthesizes key signals, and sends a formatted summary.
+Daily weekday briefing delivered as a Slack DM to Trevor Anderson at 8:30 AM ET.
+Pulls from Jira, Confluence, Slack, and Microsoft 365 Calendar, synthesizes key
+signals, and sends a formatted summary.
+
+**Canonical location:** `routines/morning-briefing/`
 
 **Prerequisites**
 - Claude Code CLI (`claude`) installed and in `$PATH`
@@ -17,18 +21,25 @@ Daily weekday briefing delivered as a Slack DM at 8:30 AM ET. Pulls from Jira, C
 
 **Setup**
 ```bash
-cd morning_briefing
+cd routines/morning-briefing
 chmod +x run.sh install_cron.sh
 ./install_cron.sh
 ```
 
 **Manual run (for testing)**
 ```bash
-./morning_briefing/run.sh
+bash routines/morning-briefing/run.sh
 ```
 
 **Files**
-- `prompt.md` — Full briefing prompt with date placeholders (`{{DATE}}`, `{{DATE_ISO}}`)
-- `run.sh` — Substitutes dates, calls `claude --print`, logs output
-- `install_cron.sh` — Installs the `TZ=America/New_York 30 8 * * 1-5` cron entry
-- `logs/` — Runtime logs, gitignored
+
+| File | Purpose |
+|------|---------|
+| `prompt.md` | Briefing prompt — data-pull, synthesis, and delivery instructions |
+| `run.sh` | Shell wrapper for cron — date injection, holiday skip, logging, CLI invocation |
+| `install_cron.sh` | One-time cron registration, idempotent |
+| `holidays.txt` | US federal holiday dates — update annually |
+| `logs/` | Per-run logs, gitignored, retained for 30 runs |
+
+See [`routines/morning-briefing/README.md`](routines/morning-briefing/README.md)
+for full setup documentation including systemd timer and launchd plist alternatives.

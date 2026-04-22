@@ -30,17 +30,27 @@ if [[ -f "$HOLIDAY_FILE" ]] && grep -q "^${TODAY}" "$HOLIDAY_FILE"; then
   exit 0
 fi
 
-# Run the Claude routine
-# --print: non-interactive mode; outputs to stdout
-# --mcp-config is inherited from the Claude Code environment
-log "Invoking claude with morning briefing prompt"
+# Date strings injected into the prompt to avoid ambiguity at runtime
+DATE_DISPLAY="$(date '+%A, %B %-d, %Y')"   # e.g. Wednesday, April 22, 2026
+DATE_ISO="$TODAY"                           # e.g. 2026-04-22
 
+log "Invoking claude for $DATE_DISPLAY"
+
+# Render prompt by substituting date placeholders into a temp file
+RENDERED="$(mktemp)"
+trap 'rm -f "$RENDERED"' EXIT
+sed \
+  -e "s/{{DATE}}/${DATE_DISPLAY}/g" \
+  -e "s/{{DATE_ISO}}/${DATE_ISO}/g" \
+  "$PROMPT_FILE" > "$RENDERED"
+
+# Run claude non-interactively with explicit MCP tool allowlist
 claude \
   --print \
   --dangerously-skip-permissions \
-  < "$PROMPT_FILE" \
+  --allowedTools "mcp__Atlassian__*,mcp__Slack__*,mcp__Microsoft-365__*" \
+  < "$RENDERED" \
   >> "$LOG_FILE" 2>&1
-
 EXIT_CODE=$?
 
 if [[ $EXIT_CODE -eq 0 ]]; then
